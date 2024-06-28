@@ -4,6 +4,10 @@ import time
 import traceback
 import pandas as pd
 
+import Stockdeveloper
+
+print(f"Strategy developed by Programetix visit link for more development requirements : {'https://programetix.com/'} ")
+
 def get_user_settings():
     global result_dict
     # Symbol,lotsize,Stoploss,Target1,Target2,Target3,Target4,Target1Lotsize,Target2Lotsize,Target3Lotsize,Target4Lotsize,BreakEven,ReEntry
@@ -17,7 +21,9 @@ def get_user_settings():
             # Create a nested dictionary for each symbol
             symbol_dict = {
                 'Symbol': row['Symbol'],"VIX_CONDITION":None,"BaseSymbol":row['BaseSymbol'],"StepNumber":row['StepNumber'],
-                "StepDistance":row['StepDistance'],'TradeExpiery':row['TradeExpiery'],"runonce":False,"SelectedPremium":row['SelectedPremium'],"CE_CONTRACT":None,"PE_Contract":None
+                "StepDistance":row['StepDistance'],'TradeExpiery':row['TradeExpiery'],"runonce":False,"SelectedPremium":row['SelectedPremium'],"CE_CONTRACT":None,"PE_Contract":None,
+                "TargetPercentage":float(row['TargetPercentage']),"InitialTrade":None,"Target":None,"OrderSymbol":row['OrderSymbol'],"callSymbol":None,"putSymbol":None,
+                "callstrike":None,"putstrike":None
             }
             result_dict[row['Symbol']] = symbol_dict
         print("result_dict: ", result_dict)
@@ -38,10 +44,7 @@ def delete_file_contents(file_name):
         print(f"File {file_name} not found.")
     except Exception as e:
         print(f"An error occurred: {str(e)}")
-
 result_dict={}
-
-
 def custom_round(price, symbol):
     rounded_price = None
     if symbol == "NIFTY":
@@ -86,6 +89,7 @@ def get_api_credentials():
     return credentials
 get_user_settings()
 credentials_dict = get_api_credentials()
+stockdevaccount=credentials_dict.get('stockdevaccount')
 api_key=credentials_dict.get('apikey')
 username=credentials_dict.get('USERNAME')
 pwd=credentials_dict.get('pin')
@@ -95,6 +99,58 @@ AngelIntegration.symbolmpping()
 # 2941,99926017,India VIX,INDIA VIX,,0.0,1,AMXIDX,NSE,0.000000
 strikeListCe= {}
 strikeListPe= {}
+client_dict={}
+
+def stock_dev_login_multiclient(client_dict):
+
+    for value, daram in client_dict.items():
+        Title = daram['Title']
+        if isinstance(Title, str):
+            daram['autotrader']=Stockdeveloper.login(daram['Value'])
+    print("client_dict: ",client_dict)
+
+stock_dev_login_multiclient(client_dict)
+
+def stockdev_multiclient_orderplacement_buy(basesymbol,client_dict,timestamp,symbol,direction,Stoploss,Target,qty,price, side):
+    Orderqty=None
+    for value, daram in client_dict.items():
+        Title = daram['Title']
+        if isinstance(Title, str):
+            if basesymbol=="NIFTY":
+                Orderqty=qty*daram['NiftyQtyMultiplier']
+            if basesymbol=="BANKNIFTY":
+                Orderqty=qty*daram['Bankniftyultiplier']
+
+
+            Stockdeveloper.regular_order(autotrader=daram["autotrader"],account=daram['Title'], segment="NSE", symbol=symbol,
+                                         direction=direction
+                                         , orderType="MARKET", productType='INTRADAY', qty=Orderqty,
+                                         price=price)
+            orderlog = (
+                f"{timestamp} Buy Order executed {side} side {symbol} @  {price},stoploss= {Stoploss}, "
+                f"target= {Target} : Account = {daram['Title']} ")
+            print(orderlog)
+            write_to_order_logs(orderlog)
+
+# exit
+def stockdev_multiclient_orderplacement_exit(basesymbol,client_dict,timestamp,symbol,direction,Stoploss,Target,qty,price,log):
+    Orderqty = None
+    for value, daram in client_dict.items():
+        Title = daram['Title']
+        if isinstance(Title, str):
+            if basesymbol=="NIFTY":
+                Orderqty=qty*daram['NiftyQtyMultiplier']
+            if basesymbol=="BANKNIFTY":
+                Orderqty=qty*daram['Bankniftyultiplier']
+            Stockdeveloper.regular_order(autotrader=daram["autotrader"],account=daram['Title'], segment="NSE", symbol=symbol,
+                                         direction=direction
+                                         , orderType="MARKET", productType='INTRADAY', qty=Orderqty,
+                                         price=price)
+            orderlog = (
+                f"{timestamp} {log} {symbol} @  {price} "
+                f"target= {Target} : Account = {daram['Title']} ")
+            print(orderlog)
+            write_to_order_logs(orderlog)
 
 def genertaepricedictpe(price, step, distance,BaseSymbol,formatted_date):
     start_price = price - (step * distance)
@@ -104,7 +160,7 @@ def genertaepricedictpe(price, step, distance,BaseSymbol,formatted_date):
                   price_list}
     for price in price_dict:
         pe_symbol = price_dict[price]["PESymbol"]
-        params = {'Symbol': BaseSymbol,  'PESymbol': pe_symbol}
+        params = {'Symbol': BaseSymbol,  'PESymbol': pe_symbol,"Strike":price}
         price_dict[price]["PEPREMIUM"] = AngelIntegration.get_ltp(segment="NFO", symbol=params['PESymbol'],
                                                                   token=get_token(params['PESymbol']))
 
@@ -118,7 +174,7 @@ def generatepricedictce(price, step, distance,BaseSymbol,formatted_date):
     price_dict = {price: {"CESymbol": f"{BaseSymbol}{formatted_date}{price}CE", "CEPREMIUM": "PRE"} for price in price_list}
     for price in price_dict:
         ce_symbol = price_dict[price]["CESymbol"]
-        params = {'Symbol': BaseSymbol, 'CESymbol': ce_symbol}
+        params = {'Symbol': BaseSymbol, 'CESymbol': ce_symbol,"Strike":price}
         price_dict[price]["CEPREMIUM"] = AngelIntegration.get_ltp(segment="NFO", symbol=params['CESymbol'],
                                                                   token=get_token(params['CESymbol']))
     return price_dict
@@ -145,25 +201,28 @@ def finc_closest_Ce(price_dict, target_premium):
 
     return closest_ce_symbol
 
-def find_closest_symbols(price_dict, target_premium):
-    closest_ce_symbol = None
-    closest_pe_symbol = None
-    closest_ce_premium = float('-inf')
-    closest_pe_premium = float('-inf')
+def callstrike(price_dict, target_premium):
+    def finc_closest_Ce(price_dict, target_premium):
+        closest_ce_symbol = None
+        closest_ce_premium = float('-inf')
+        for price in price_dict:
+            ce_premium = price_dict[price]["CEPREMIUM"]
+            if ce_premium < target_premium and ce_premium > closest_ce_premium:
+                closest_ce_premium = ce_premium
+                closest_ce_symbol = price_dict[price]["CESymbol"]
 
-    for price in price_dict:
-        ce_premium = price_dict[price]["CEPREMIUM"]
-        pe_premium = price_dict[price]["PEPREMIUM"]
+            return price
+def putstrike(price_dict, target_premium):
+    def finc_closest_Ce(price_dict, target_premium):
+        closest_ce_symbol = None
+        closest_ce_premium = float('-inf')
+        for price in price_dict:
+            ce_premium = price_dict[price]["CEPREMIUM"]
+            if ce_premium < target_premium and ce_premium > closest_ce_premium:
+                closest_ce_premium = ce_premium
+                closest_ce_symbol = price_dict[price]["CESymbol"]
 
-        if ce_premium < target_premium and ce_premium > closest_ce_premium:
-            closest_ce_premium = ce_premium
-            closest_ce_symbol = price_dict[price]["CESymbol"]
-
-        if pe_premium < target_premium and pe_premium > closest_pe_premium:
-            closest_pe_premium = pe_premium
-            closest_pe_symbol = price_dict[price]["PESymbol"]
-
-    return closest_ce_symbol, closest_pe_symbol
+            return price
 
 def get_token(symbol):
     df= pd.read_csv("Instrument.csv")
@@ -189,11 +248,6 @@ def main_strategy():
                                                                       token=get_token(params['Symbol'])),symbol=params['BaseSymbol']))
                         date_obj = datetime.strptime(params["TradeExpiery"], "%d-%b-%y")
                         formatted_date = date_obj.strftime("%d%b%y").upper()
-
-
-                        # strikeList=generate_price_dict(price=SpotLtp, step=params["StepNumber"], distance=params["StepDistance"]
-                        #                                ,BaseSymbol=params['BaseSymbol'],formatted_date=formatted_date)
-
                         strikeListCe=generatepricedictce(price=SpotLtp, step=params["StepNumber"], distance=params["StepDistance"]
                                                        ,BaseSymbol=params['BaseSymbol'],formatted_date=formatted_date)
                         strikeListPe=genertaepricedictpe(price=SpotLtp, step=params["StepNumber"], distance=params["StepDistance"]
@@ -218,8 +272,65 @@ def main_strategy():
                             print(OrderLog)
                             write_to_order_logs(OrderLog)
 
-                if params["VIX_CONDITION"] == True and params["CE_CONTRACT"]is not None and params["PE_Contract"]is not None :
-                    pass
+                if params["InitialTrade"] is None and params["VIX_CONDITION"] == True and params["CE_CONTRACT"]is not None and params["PE_Contract"]is not None :
+                    params["InitialTrade"]=True
+                    # BANKNIFTY_30-DEC-2021_CE_40000
+                    params['putstrike'] = putstrike(strikeListPe, target_premium=params['SelectedPremium'])
+                    params['callstrike']=callstrike(strikeListCe, target_premium=params['SelectedPremium'])
+                    params[
+                        "putSymbol"] = f"{params['OrderSymbol']}_{Stockdeveloper.convert_date(params['TradeExp'])}_PE_{params['putstrike']}"
+
+                    params["callSymbol"]=f"{params['OrderSymbol']}_{Stockdeveloper.convert_date(params['TradeExp'])}_CE_{params['callstrike']}"
+                    TradeCeLtp=AngelIntegration.get_ltp(segment="NFO", symbol=params['CE_CONTRACT'],
+                                                                      token=get_token(params['CE_CONTRACT']))
+
+                    stockdev_multiclient_orderplacement_buy(basesymbol=params['OrderSymbol'], client_dict=client_dict,
+                                                            timestamp=timestamp, symbol=params["callSymbol"],
+                                                            direction="BUY", Stoploss=params['Stoploss'],
+                                                            Target=params['Target'],
+                                                            qty=params["Quantity"], price=TradeCeLtp, side="CALL")
+
+                    OrderLog = f"{timestamp} Buy order executed @ Call {params['CE_CONTRACT']} @ TradePrice: {TradeCeLtp}"
+                    print(OrderLog)
+                    write_to_order_logs(OrderLog)
+                    TradePeLtp =AngelIntegration.get_ltp(segment="NFO", symbol=params['PE_Contract'],
+                                                                      token=get_token(params['PE_Contract']))
+                    stockdev_multiclient_orderplacement_buy(basesymbol=params['Symbol'], client_dict=client_dict,
+                                                            timestamp=timestamp, symbol=params["putSymbol"],
+                                                            direction="BUY", Stoploss=params['Stoploss'],
+                                                            Target=params['Target'],
+                                                            qty=params["Quantity"], price=TradePeLtp, side="PUT")
+
+                    OrderLog = f"{timestamp} Buy order executed @ Put {params['PE_Contract']} @ TradePrice: {TradePeLtp}"
+                    print(OrderLog)
+                    write_to_order_logs(OrderLog)
+                    totalInvestment=TradeCeLtp+TradePeLtp
+                    params["Target"]=totalInvestment*params["TargetPercentage"]*0.01
+                    params["Target"]=totalInvestment+params["Target"]
+
+                if params["InitialTrade"]==True:
+                    callltp=AngelIntegration.get_ltp(segment="NFO", symbol=params['CE_CONTRACT'],
+                                                                      token=get_token(params['CE_CONTRACT']))
+                    putltp=AngelIntegration.get_ltp(segment="NFO", symbol=params['PE_Contract'],
+                                                                      token=get_token(params['PE_Contract']))
+                    if (callltp>=params["Target"] or putltp>=params["Target"] ):
+                        stockdev_multiclient_orderplacement_exit(basesymbol=params['Symbol'], client_dict=client_dict,
+                                                                 timestamp=timestamp, symbol=params["putSymbol"],
+                                                                 direction="SELL", Stoploss=params['Stoploss'],
+                                                                 Target=params['Target'],
+                                                                 qty=params["Quantity"], price=putltp,
+                                                                 log="Target executed PUT trade @ ")
+
+                        stockdev_multiclient_orderplacement_exit(basesymbol=params['Symbol'], client_dict=client_dict,
+                                                                 timestamp=timestamp, symbol=params["callSymbol"],
+                                                                 direction="SELL", Stoploss=params['Stoploss'],
+                                                                 Target=params['Target'],
+                                                                 qty=params["Quantity"], price=putltp,
+                                                                 log="Target executed CALL trade @ ")
+                        OrderLog = f"{timestamp} Target Executed callltp={callltp}, putltp={putltp}, exiting call contract:{params['CE_CONTRACT']} , PutContract: { params['PE_Contract']}"
+                        print(OrderLog)
+                        write_to_order_logs(OrderLog)
+                        params["InitialTrade"] =False
 
 
 
@@ -240,3 +351,6 @@ while True:
     if current_time>=start_time and current_time< stop_time:
         main_strategy()
         time.sleep(1)
+
+
+# strike kese niklegi dhundna h
