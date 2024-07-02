@@ -8,12 +8,12 @@ import pyotp
 from logzero import logger
 
 
-apikey="SD8nyHFE"
-secret="22f4c69e-7086-4757-9bb0-38c0747568a3"
-USERNAME="C118144"
-PASSWORD="Cash2021$"
-totp_string="N6J5ZODY5F77RYCYXEKHXNPEGE"
-pin = "0513"
+apikey="Sg2W3HFf"
+secret="9e400a02-cf6a-4e03-887e-a436f413cd36"
+USERNAME="S60612177"
+PASSWORD="Akki123@"
+totp_string="D45IFKPPHUFT3OHK7OAWMSLUCA"
+pin = "1234"
 smartApi=None
 
 

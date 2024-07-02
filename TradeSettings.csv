@@ -1,2 +1,2 @@
-Symbol,lotsize,StepNumber,StepDistance,BaseSymbol,OrderSymbol,TradeExpiery,SelectedPremium,TargetPercentage
-NIFTY27JUN24FUT,25,5,100,BANKNIFTY,NIFTY,27-Jun-24,40,10
+Symbol,Quantity,StepNumber,StepDistance,BaseSymbol,OrderSymbol,TradeExpiery,SelectedPremium,TargetPercentage
+NIFTY25JUL24FUT,25,5,100,BANKNIFTY,NIFTY,04-Jul-24,40,10
