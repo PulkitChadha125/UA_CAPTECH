@@ -1,0 +1,35 @@
+Date: 3/7/2024
+Time: 19:44
+Group ID: IX3MmbhQ3smBrLYvUYWeHi
+Message: Hello from your Python bot!
+--------------------
+Date: 3/7/2024
+Time: 19:56
+Phone Number: YOUR_GROUP_ID
+Message: Hello from your Python bot!
+--------------------
+Date: 3/7/2024
+Time: 19:57
+Phone Number: YOUR_GROUP_ID
+Message: Hello from your Python bot!
+--------------------
+Date: 3/7/2024
+Time: 19:58
+Phone Number: YOUR_GROUP_ID
+Message: Hello from your Python bot!
+--------------------
+Date: 3/7/2024
+Time: 20:0
+Phone Number: YOUR_GROUP_ID
+Message: Hello from your Python bot!
+--------------------
+Date: 3/7/2024
+Time: 20:1
+Group ID: IX3MmbhQ3smBrLYvUYWeHi
+Message: Hello from your Python bot!
+--------------------
+Date: 3/7/2024
+Time: 20:2
+Group ID: IX3MmbhQ3smBrLYvUYWeHi
+Message: Hello from your Python bot!
+--------------------

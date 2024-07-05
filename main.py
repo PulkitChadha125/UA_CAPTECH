@@ -4,7 +4,7 @@ import time
 import traceback
 import pandas as pd
 import Stockdeveloper
-
+import TelegramIntegration as tele
 print(f"Strategy developed by Programetix visit link for more development requirements : {'https://programetix.com/'} ")
 
 def get_user_settings():
@@ -260,8 +260,13 @@ def get_token(symbol):
     if not row.empty:
         token = row.iloc[0]['token']
         return token
+
+
+callltp =0
+putltp =0
+
 def main_strategy():
-    global result_dict,strikeListCe,strikeListPe
+    global result_dict,strikeListCe,strikeListPe,callltp ,putltp
     try:
         for symbol, params in result_dict.items():
             symbol_value = params['Symbol']
@@ -304,6 +309,7 @@ def main_strategy():
                             OrderLog=f"{timestamp} Either CE_CONTRACT or PE_Contract is none no trading will be done in @ {params['Symbol']} "
                             print(OrderLog)
                             write_to_order_logs(OrderLog)
+                            tele.send_msg(OrderLog)
 
                 if params["InitialTrade"] is None and params["VIX_CONDITION"] == True and params["CE_CONTRACT"]is not None and params["PE_Contract"]is not None :
                     params["InitialTrade"]=True
@@ -330,6 +336,7 @@ def main_strategy():
                     OrderLog = f"{timestamp} Buy order executed @ Call {params['CE_CONTRACT']} @ TradePrice: {TradeCeLtp}"
                     print(OrderLog)
                     write_to_order_logs(OrderLog)
+                    tele.send_msg(OrderLog)
                     TradePeLtp =AngelIntegration.get_ltp(segment="NFO", symbol=params['PE_Contract'],
                                                                       token=get_token(params['PE_Contract']))
                     stockdev_multiclient_orderplacement_buy(basesymbol=params['OrderSymbol'], client_dict=client_dict,
@@ -345,10 +352,11 @@ def main_strategy():
                     OrderLog = f"{timestamp} Buy order executed @ Put {params['PE_Contract']} @ TradePrice: {TradePeLtp}"
                     print(OrderLog)
                     write_to_order_logs(OrderLog)
-
+                    tele.send_msg(OrderLog)
                     OrderLog = f"{timestamp} Total investment : {totalInvestment} , Target value : {params['Target']}"
                     print(OrderLog)
                     write_to_order_logs(OrderLog)
+                    tele.send_msg(OrderLog)
 
                 if params["InitialTrade"]==True:
                     callltp=AngelIntegration.get_ltp(segment="NFO", symbol=params['CE_CONTRACT'],
@@ -373,6 +381,7 @@ def main_strategy():
                         print(OrderLog)
                         write_to_order_logs(OrderLog)
                         params["InitialTrade"] =False
+                        tele.send_msg(OrderLog)
 
 
 
@@ -381,7 +390,7 @@ def main_strategy():
         traceback.print_exc()
 
 def TimeBasedExit():
-    global result_dict, callStrike, putStrike, stockdevaccount, client_dict
+    global result_dict, callStrike, putStrike, stockdevaccount, client_dict,callltp ,putltp
     ExpieryList = []
     try:
         for symbol, params in result_dict.items():
@@ -390,10 +399,10 @@ def TimeBasedExit():
             timestamp = timestamp.strftime("%d/%m/%Y %H:%M:%S")
             if isinstance(symbol_value, str):
                 if params["InitialTrade"] ==True:
-                    callltp = AngelIntegration.get_ltp(segment="NFO", symbol=params['CE_CONTRACT'],
-                                                       token=get_token(params['CE_CONTRACT']))
-                    putltp = AngelIntegration.get_ltp(segment="NFO", symbol=params['PE_Contract'],
-                                                      token=get_token(params['PE_Contract']))
+                    # callltp = AngelIntegration.get_ltp(segment="NFO", symbol=params['CE_CONTRACT'],
+                    #                                    token=get_token(params['CE_CONTRACT']))
+                    # putltp = AngelIntegration.get_ltp(segment="NFO", symbol=params['PE_Contract'],
+                    #                                   token=get_token(params['PE_Contract']))
                     stockdev_multiclient_orderplacement_exit(basesymbol=params['OrderSymbol'], client_dict=client_dict,
                                                                  timestamp=timestamp, symbol=params["putSymbol"],
                                                                  direction="SELL", Stoploss=0,
