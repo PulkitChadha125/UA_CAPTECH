@@ -1,0 +1,17 @@
+09/07/2024 11:40:01 CE_CONTRACT:  NIFTY11JUL2424600CE, PE_Contract: NIFTY11JUL2424200PE @ NIFTY25JUL24FUT 
+09/07/2024 11:40:01 Buy Order executed CALL side NIFTY_11-Jul-2024_CE_24600 @  17.2,stoploss= 0, target= None : Account = Akashudawant 
+09/07/2024 11:40:01 Buy Order executed CALL side NIFTY_11-Jul-2024_CE_24600 @  17.2,stoploss= 0, target= None : Account = GaneshPawar 
+09/07/2024 11:40:01 Buy Order executed CALL side NIFTY_11-Jul-2024_CE_24600 @  17.2,stoploss= 0, target= None : Account = Sujata 
+09/07/2024 11:40:01 Buy order executed @ Call NIFTY11JUL2424600CE @ TradePrice: 17.2
+09/07/2024 11:40:01 Buy Order executed PUT side NIFTY_11-Jul-2024_PE_24200 @  28.0,stoploss= 0, target= None : Account = Akashudawant 
+09/07/2024 11:40:01 Buy Order executed PUT side NIFTY_11-Jul-2024_PE_24200 @  28.0,stoploss= 0, target= None : Account = GaneshPawar 
+09/07/2024 11:40:01 Buy Order executed PUT side NIFTY_11-Jul-2024_PE_24200 @  28.0,stoploss= 0, target= None : Account = Sujata 
+09/07/2024 11:40:01 Buy order executed @ Put NIFTY11JUL2424200PE @ TradePrice: 28.0
+09/07/2024 11:40:01 Total investment : 45.2 , Target value : 49.720000000000006
+09/07/2024 11:45:01 Target executed PUT trade @  NIFTY_11-Jul-2024_PE_24200 @  25.85 target= 49.720000000000006 : Account = Akashudawant 
+09/07/2024 11:45:01 Target executed PUT trade @  NIFTY_11-Jul-2024_PE_24200 @  25.85 target= 49.720000000000006 : Account = GaneshPawar 
+09/07/2024 11:45:01 Target executed PUT trade @  NIFTY_11-Jul-2024_PE_24200 @  25.85 target= 49.720000000000006 : Account = Sujata 
+09/07/2024 11:45:01 Target executed CALL trade @  NIFTY_11-Jul-2024_CE_24600 @  18.35 target= 49.720000000000006 : Account = Akashudawant 
+09/07/2024 11:45:01 Target executed CALL trade @  NIFTY_11-Jul-2024_CE_24600 @  18.35 target= 49.720000000000006 : Account = GaneshPawar 
+09/07/2024 11:45:01 Target executed CALL trade @  NIFTY_11-Jul-2024_CE_24600 @  18.35 target= 49.720000000000006 : Account = Sujata 
+09/07/2024 11:45:01Time based exit happened  callltp=18.35, putltp=25.85, exiting call contract:NIFTY11JUL2424600CE , PutContract: NIFTY11JUL2424200PE

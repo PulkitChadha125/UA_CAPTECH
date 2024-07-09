@@ -359,6 +359,8 @@ def main_strategy():
                     tele.send_msg(OrderLog)
 
                 if params["InitialTrade"]==True:
+                    print("params['CE_CONTRACT']: ",params['CE_CONTRACT'])
+                    print("params['PE_Contract']: ", params['PE_Contract'])
                     callltp=AngelIntegration.get_ltp(segment="NFO", symbol=params['CE_CONTRACT'],
                                                                       token=get_token(params['CE_CONTRACT']))
                     putltp=AngelIntegration.get_ltp(segment="NFO", symbol=params['PE_Contract'],
@@ -403,6 +405,9 @@ def TimeBasedExit():
                     #                                    token=get_token(params['CE_CONTRACT']))
                     # putltp = AngelIntegration.get_ltp(segment="NFO", symbol=params['PE_Contract'],
                     #                                   token=get_token(params['PE_Contract']))
+
+                    print("callltp: ",callltp)
+                    print("putltp: ",putltp)
                     stockdev_multiclient_orderplacement_exit(basesymbol=params['OrderSymbol'], client_dict=client_dict,
                                                                  timestamp=timestamp, symbol=params["putSymbol"],
                                                                  direction="SELL", Stoploss=0,
@@ -420,6 +425,7 @@ def TimeBasedExit():
                     print(OrderLog)
                     write_to_order_logs(OrderLog)
                     params["InitialTrade"] = False
+                    tele.send_msg(OrderLog)
 
 
 
@@ -437,14 +443,13 @@ while True:
     stop_time = datetime.strptime(Stoptime, '%H:%M').time()
 
     current_time = datetime.now().time()
-    main_strategy()
     time.sleep(1)
     now = datetime.now().time()
     if current_time>=start_time and current_time< stop_time:
         main_strategy()
-        time.sleep(1)
+        time.sleep(2)
 
-    if now ==stop_time:
+    if now >= stop_time:
         TimeBasedExit()
 
 
